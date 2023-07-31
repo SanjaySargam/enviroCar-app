@@ -19,6 +19,7 @@
 package org.envirocar.app.views.obdselection;
 
 import android.Manifest;
+import androidx.appcompat.app.AlertDialog;
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -42,6 +43,7 @@ import org.envirocar.app.BaseApplicationComponent;
 import org.envirocar.app.R;
 import org.envirocar.app.handler.BluetoothHandler;
 import org.envirocar.app.injection.BaseInjectorFragment;
+import org.envirocar.app.views.utils.DialogUtils;
 import org.envirocar.core.events.bluetooth.BluetoothPairingChangedEvent;
 import org.envirocar.core.events.bluetooth.BluetoothStateChangedEvent;
 import org.envirocar.core.logging.Logger;
@@ -113,6 +115,7 @@ public class OBDSelectionFragment extends BaseInjectorFragment implements EasyPe
 
     private boolean isResumed = false;
     public boolean pairingIsRunning = false;
+    private AlertDialog progress;
 
     @Nullable
     @Override
@@ -465,6 +468,12 @@ public class OBDSelectionFragment extends BaseInjectorFragment implements EasyPe
      */
 
     private void pairDevice(BluetoothDevice device, final View view) {
+        progress = DialogUtils.createProgressBarDialogBuilder(getContext(),
+                        R.string.pairing,
+                        R.drawable.baseline_bluetooth_connected_24,
+                        (String) null)
+                .setCancelable(false)
+                .create();
         final TextView text = view.findViewById(R.id
                 .bluetooth_selection_preference_device_list_entry_text);
 
@@ -473,6 +482,7 @@ public class OBDSelectionFragment extends BaseInjectorFragment implements EasyPe
 
                     @Override
                     public void onPairingStarted(BluetoothDevice device) {
+                        progress.show();
                         pairingIsRunning = true;
                         showSnackbar(getString(R.string.obd_selection_pairing_started));
                         if (text != null) {
@@ -482,6 +492,7 @@ public class OBDSelectionFragment extends BaseInjectorFragment implements EasyPe
 
                     @Override
                     public void onPairingError(BluetoothDevice device) {
+                        progress.dismiss();
                         pairingIsRunning = false;
                         if (getActivity() != null) {
                             Toast.makeText(getActivity(),
@@ -494,6 +505,7 @@ public class OBDSelectionFragment extends BaseInjectorFragment implements EasyPe
 
                     @Override
                     public void onDevicePaired(BluetoothDevice device) {
+                        progress.dismiss();
                         pairingIsRunning = false;
                         // Device is paired. Add it to the array adapter for paired devices and
                         // remove it from the adapter for new devices.
